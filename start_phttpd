@@ -1,0 +1,74 @@
+#!/bin/sh
+# A simple, configurable HTTP server written in POSIX sh.
+# "write once, run anywhere, run for good"
+# This is only tested on Bash on Ubuntu on Windows
+#
+# Original author: BRAVEMAN LONGBRIDGE, 2016
+# powerd by POSIX原理主義 
+########################################################
+umask 0022
+set -eu
+unset IFS
+export LC_ALL='C'
+export PATH="$(command -p getconf PATH):${PATH:-}"
+
+if type socat >/dev/null 2>&1; then
+  CMD_SOCAT='socat'
+elif type nc >/dev/null 2>&1; then
+  CMD_NC='nc'
+  [ -p /tmp/servepipe ] || {
+    mkfifo /tmp/servepipe
+    PIPE='/tmp/servepipe'
+  }
+elif type netcat >/dev/null 2>&1; then
+  CMD_NETCAT='netcat'
+  [ -p /tmp/servepipe ] || {
+    mkfifo /tmp/servepipe
+    PIPE='/tmp/servepipe'
+  }
+else
+  echo 'NO COMMAND' 1>&2
+  exit 1
+fi
+CONF=$(dirname $0)/phttpd.conf
+[ -r $CONF ] || {
+     cat >$CONF <<-'END'
+    # phttpd.conf - configuration for phttpd
+    #
+    # The format of the rules are:
+    #    on_uri_match BRE command [args]
+    #    without_condition command [args]
+    #
+    # The lists of command:
+    #    serve_static_string, 
+    #    serve_file, 
+    #    serve_dir_with_tree, 
+    #    serve_dir_with_ls, 
+    #    serve_dir_or_file_from
+    # Recommended Example:
+    #    DOCROOT='/mnt/c/Users/username/OneDrive/Documents'
+    #    on_uri_match '/.*' serve_dir_or_file_from "$DOCROOT"
+    without_condition serve_static_string \
+    'Hello! this is the configurable HTTP server written in POSIX sh.'
+END
+  echo 'Check *.conf and re-execute' 1>&2
+  exit 1 
+}
+RES=$(dirname $0)/bin/RESPONSE_HEADERS
+REQ=$(dirname $0)/bin/REQUEST_HEADERS
+RUN=$(dirname $0)/bin/phttpd 
+trap "exit 1"          HUP INT PIPE QUIT TERM
+trap "rm -f $RES $REQ ${PIPE:-}" EXIT
+
+if [ -n "${CMD_SOCAT:-}" ]; then
+  socat -vv TCP-LISTEN:${1:-1234},crlf,reuseaddr,fork SYSTEM:"$RUN" 2>/dev/null
+else 
+  while :
+  do
+    cat "$PIPE"                                         | 
+    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${1:-1234} -w 1 -q 1 | 
+    "$RUN" 1>"$PIPE"                                    #
+    [ $? != 0 ] && break                                #
+  done  
+fi
+
