@@ -5,25 +5,25 @@
 # required: mime-make 
 # Original author: BRAVEMAN LONGBRIDGE, 2016
 # powerd by POSIX原理主義 
-###############################################################################
+########################################################################
 
-###############################################################################
+########################################################################
 # 初期化
-###############################################################################
-# === 1.初期化処理 ==========================================================  
-umask 0022                                                                    #
-set -eu                                                                       #
-unset IFS                                                                     #
-export LC_ALL='C'                                                             #
-export PATH="$(command -p getconf PATH):${PATH:-}"                            #
-# === 2.パラメーター1 =======================================================  
-DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                                      #
-# === 3.パラメーター2 =======================================================  
+########################################################################
+# === 1.初期化処理 ====================================================  
+umask 0022                                                             #
+set -eu                                                                #
+unset IFS                                                              #
+export LC_ALL='C'                                                      #
+export PATH="$(command -p getconf PATH):${PATH:-}"                     #
+# === 2.パラメーター1 =================================================  
+DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                               #
+# === 3.パラメーター2 =================================================  
 PORT=1234
-DOCROOT=~                                                                     #
-regex='/.*'                                                                   #
-# === 4.エラー終了関数定義 ==================================================
-print_usage_and_exit () {                                                     #
+DOCROOT=~                                                              #
+regex='/.*'                                                            #
+# === 4.エラー終了関数定義 ============================================
+print_usage_and_exit () {                                              #
   cat <<-__USAGE 1>&2
 	Usage : ${0##*/} [options] 
 	        OPTIONS:
@@ -33,85 +33,85 @@ print_usage_and_exit () {                                                     #
 	        -d <DIR>  |--docroot=<DIR>
 	Tue Jan 3 23:24:45 JST 2017
 __USAGE
-  exit 1                                                                      #
-}                                                                             #
-error_exit() {                                                                #
-  [ -n "$2"       ] && echo "${0##*/}: $2" 1>&2                               #
-  exit $1                                                                     #
-}                                                                             #
-# === 5.必要なプログラムの存在を確認する ======================================
-if type socat >/dev/null 2>&1; then                                           #
-  CMD_SOCAT='socat'                                                           #
-elif type nc >/dev/null 2>&1; then                                            #
-  CMD_NC='nc'                                                                 #
-  [ -p /tmp/servepipe ] || {                                                  #
-    mkfifo /tmp/servepipe                                                     #
-    PIPE='/tmp/servepipe'                                                     #
-  }                                                                           #
-elif type netcat >/dev/null 2>&1; then                                        #
-  CMD_NETCAT='netcat'                                                         #
-  [ -p /tmp/servepipe ] || {                                                  #
-    mkfifo /tmp/servepipe                                                     #
-    PIPE='/tmp/servepipe'                                                     #
-  }                                                                           #
-else                                                                          #
-  echo 'NO COMMAND' 1>&2                                                      #
-  exit 1                                                                      #
-fi                                                                            #
-# === 6.不要な名前付きパイプを消す ============================================
-trap "exit 1"          HUP INT PIPE QUIT TERM                                 #
-trap "rm -f ${PIPE:-}" EXIT                                                   #
+  exit 1                                                               #
+}                                                                      #
+error_exit() {                                                         #
+  [ -n "$2"       ] && echo "${0##*/}: $2" 1>&2                        #
+  exit $1                                                              #
+}                                                                      #
+# === 5.必要なプログラムの存在を確認する ===============================
+if type socat >/dev/null 2>&1; then                                    #
+  CMD_SOCAT='socat'                                                    #
+elif type nc >/dev/null 2>&1; then                                     #
+  CMD_NC='nc'                                                          #
+  [ -p /tmp/servepipe ] || {                                           #
+    mkfifo /tmp/servepipe                                              #
+    PIPE='/tmp/servepipe'                                              #
+  }                                                                    #
+elif type netcat >/dev/null 2>&1; then                                 #
+  CMD_NETCAT='netcat'                                                  #
+  [ -p /tmp/servepipe ] || {                                           #
+    mkfifo /tmp/servepipe                                              #
+    PIPE='/tmp/servepipe'                                              #
+  }                                                                    #
+else                                                                   #
+  echo 'NO COMMAND' 1>&2                                               #
+  exit 1                                                               #
+fi                                                                     #
+# === 6.不要な名前付きパイプを消す =====================================
+trap "exit 1"          HUP INT PIPE QUIT TERM                          #
+trap "rm -f ${PIPE:-}" EXIT                                            #
 
-###############################################################################
+########################################################################
 # 引数解釈
-###############################################################################
-# === ヘルプ表示指定がある場合は表示して終了 ===================================
+########################################################################
+# === ヘルプ表示指定がある場合は表示して終了 ============================
 case "$# ${1:-}" in
   '1 -h'|'1 --help'|'1 --version') print_usage_and_exit;;
 esac
-# === オプション読取 =========================================================
-while :; do                                                                   #
-  case "${1:-}" in                                                            #
-    --filter)    PHTTPD="main"                                                #
-                 shift                                                        #
-                 ;;                                                           #
-    -f)          PHTTPD="main"                                                #
-                 shift                                                        #
-                 ;;                                                           #
-    --port=*)    PORT=$(printf '%s' "${1#--port=}" | tr -d '\n')              #
-                 shift                                                        #
-                 ;;                                                           #
-    -p)          PORT=$(printf '%s' "${2:-}" | tr -d '\n')                    #
-                 shift 2                                                      #
-                 ;;                                                           #
-    --regex=*)   regex=$(printf '%s' "${1#--regex=}" | tr -d '\n')            #
-                 shift                                                        #
-                 ;;                                                           #
-    -r)          s=$(printf '%s' "${2:-}" | tr -d '\n')                       #
-                 shift 2                                                      #
-                 ;;                                                           #
-    --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}" | tr -d '\n')        #
-                 shift                                                        #
-                 ;;                                                           #
-    -d)          DOCROOT=$(printf '%s' "${2:-}" | tr -d '\n')                 #
-                 shift 2                                                      #
-                 ;;                                                           #
-    --|-)        break                                                        #
-                 ;;                                                           #
-    --*|-*)      error_exit 1 'Invalid option'                                #
-                 ;;                                                           #
-    *)           break                                                        #
-                 ;;                                                           #
-  esac                                                                        #
-done                                                                          #
+# === オプション読取 ==================================================
+while :; do                                                            #
+  case "${1:-}" in                                                     #
+    --filter)    PHTTPD="main"                                         #
+                 shift                                                 #
+                 ;;                                                    #
+    -f)          PHTTPD="main"                                         #
+                 shift                                                 #
+                 ;;                                                    #
+    --port=*)    PORT=$(printf '%s' "${1#--port=}" | tr -d '\n')       #
+                 shift                                                 #
+                 ;;                                                    #
+    -p)          PORT=$(printf '%s' "${2:-}" | tr -d '\n')             #
+                 shift 2                                               #
+                 ;;                                                    #
+    --regex=*)   regex=$(printf '%s' "${1#--regex=}" | tr -d '\n')     #
+                 shift                                                 #
+                 ;;                                                    #
+    -r)          s=$(printf '%s' "${2:-}" | tr -d '\n')                #
+                 shift 2                                               #
+                 ;;                                                    #
+    --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}" | tr -d '\n') #
+                 shift                                                 #
+                 ;;                                                    #
+    -d)          DOCROOT=$(printf '%s' "${2:-}" | tr -d '\n')          #
+                 shift 2                                               #
+                 ;;                                                    #
+    --|-)        break                                                 #
+                 ;;                                                    #
+    --*|-*)      error_exit 1 'Invalid option'                         #
+                 ;;                                                    #
+    *)           break                                                 #
+                 ;;                                                    #
+  esac                                                                 #
+done                                                                   #
 
-###############################################################################
+########################################################################
 # メイン
-###############################################################################
+########################################################################
 main(){
-# === 1.リクエストヘッダ読み込み =============================================  
-read -r line || {                                                             #
-  phttpdres=$(cat <<-________________PHTTPDRES                                |
+# === 1.リクエストヘッダ読み込み =======================================
+read -r line || {                                                      #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 400 Bad Request
                 Date: $DATE
                 Expires: $DATE
@@ -120,17 +120,17 @@ read -r line || {                                                             #
 
                 400 Bad Request
 ________________PHTTPDRES
-              sed 's/^ *//'                                                   )
-printf "%s" "$phttpdres" && exit 0                                            #
-}                                                                             #
-line=$(echo "$line" | tr -d '[\r\n]')                                         #
+              sed 's/^ *//'                                            )
+printf "%s" "$phttpdres" && exit 0                                     #
+}                                                                      #
+line=$(echo "$line" | tr -d '[\r\n]')                                  #
 read -r REQUEST_METHOD REQUEST_URI REQUEST_HTTP_VERSION << END
 $(echo $line)
 END
-[ -n "$REQUEST_METHOD" ]       &&                                             \
-[ -n "$REQUEST_URI" ]          &&                                             \
-[ -n "$REQUEST_HTTP_VERSION" ] || {                                           #
-  phttpdres=$(cat <<-________________PHTTPDRES                                |
+[ -n "$REQUEST_METHOD" ]       &&                                      \
+[ -n "$REQUEST_URI" ]          &&                                      \
+[ -n "$REQUEST_HTTP_VERSION" ] || {                                    #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 400 Bad Request
                 Date: $DATE
                 Expires: $DATE
@@ -139,12 +139,12 @@ END
 
                 400 Bad Request
 ________________PHTTPDRES
-              sed 's/^ *//'                                                   )
-printf "%s" "$phttpdres" && exit 0                                            #
-}                                                                             #
-# === 2.GETメソッド以外をはじく===============================================
-[ "$REQUEST_METHOD" = "GET" ] || {                                            #
-  phttpdres=$(cat <<-________________PHTTPDRES                                |
+              sed 's/^ *//'                                            )
+printf "%s" "$phttpdres" && exit 0                                     #
+}                                                                      #
+# === 2.GETメソッド以外をはじく========================================
+[ "$REQUEST_METHOD" = "GET" ] || {                                     #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 405 Method Not Allowed
                 Date: $DATE
                 Expires: $DATE
@@ -153,23 +153,23 @@ printf "%s" "$phttpdres" && exit 0                                            #
 
                 405 Method Not Allowed
 ________________PHTTPDRES
-              sed 's/^ *//'                                                   )
-printf "%s" "$phttpdres" && exit 0                                            #
-}                                                                             #
-# === 3.REQUESTをログに残す =================================================
+              sed 's/^ *//'                                            )
+printf "%s" "$phttpdres" && exit 0                                     #
+}                                                                      #
+# === 3.REQUESTをログに残す ==========================================
 logfile=$(dirname $0)/log/request.log
-while read -r line; do                                                        #
-  line=$(echo "$line" | tr -d '[\r\n]')                                       #
-  echo "$line" >> "$logfile"                                                  #
-  [ -z "$line" ] && break                                                     #
-done                                                                          #
-# === 4.REQUEST_URIのマッチ ================================================
-{ echo "$REQUEST_URI" | grep "$regex" >/dev/null 2>&1; } && {                 #
-  # sanitaize REQUEST_URI
-  REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"
-  URL_PATH=${DOCROOT}${REQUEST_URI}                                           #
-  ls ${URL_PATH%/} >/dev/null 2>&1 || {                                       #
-    phttpdres=$(cat <<-__________________PHTTPDRES                            |
+while read -r line; do                                                 #
+  line=$(echo "$line" | tr -d '[\r\n]')                                #
+  echo "$line" >> "$logfile"                                           #
+  [ -z "$line" ] && break                                              #
+done                                                                   #
+# === 4.REQUEST_URIのマッチ ==========================================
+{ echo "$REQUEST_URI" | grep "$regex" >/dev/null 2>&1; } && {          #
+  # sanitaize REQUEST_URI                                              #
+  REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"                  #
+  URL_PATH=${DOCROOT}${REQUEST_URI}                                    #
+  ls ${URL_PATH%/} >/dev/null 2>&1 || {                                #
+    phttpdres=$(cat <<-__________________PHTTPDRES                     |
                   HTTP/1.0 400 Bad Request
                   Date: $DATE
                   Expires: $DATE
@@ -178,31 +178,31 @@ done                                                                          #
 
                   400 Bad Request
 __________________PHTTPDRES
-                sed 's/^ *//'                                                 )
-    printf "%s" "$phttpdres" && exit 0                                        #
-  }                                                                           #
-  # serve index file if exists in requested directory                         #
-  [ -d "$URL_PATH"                -a                                          \
-    -f "${URL_PATH}/index.html"   -a                                          \
-    -r "${URL_PATH}/index.html" ] &&                                          \
-  URL_PATH="${URL_PATH}/index.html"                                           #
-  if   [ -f ${URL_PATH%/} ]; then                                             #
-       [ -r ${URL_PATH%/} ] && {                                              #
-         file="${URL_PATH%/}"                                                 #
-         phttpdres=$(cat <<-_______________________PHTTPDRES                  |
+                sed 's/^ *//'                                          )
+    printf "%s" "$phttpdres" && exit 0                                 #
+  }                                                                    #
+  # serve index file if exists in requested directory                  #
+  [ -d "$URL_PATH"                -a                                   \
+    -f "${URL_PATH}/index.html"   -a                                   \
+    -r "${URL_PATH}/index.html" ] &&                                   \
+  URL_PATH="${URL_PATH}/index.html"                                    #
+  if   [ -f ${URL_PATH%/} ]; then                                      #
+       [ -r ${URL_PATH%/} ] && {                                       #
+         file="${URL_PATH%/}"                                          #
+         phttpdres=$(cat <<-_______________________PHTTPDRES           |
                        HTTP/1.0 200 OK
                        Date: $DATE
                        Expires: $DATE
                        Server: Slash Bin Slash sh
 _______________________PHTTPDRES
                      sed 's/^ *//'                                          
-                     mime-make -F "$file" "$file"                             |
-                     grep -v 'Mime.*'                                         |
-                     grep -v 'Content-Disposition'                            )
-         printf "%s\n" "$phttpdres"                                           #
-         exit 0                                                               #
-       } || {                                                                 #
-         phttpdres=$(cat <<-__________________PHTTPDRES                       |
+                     mime-make -F "$file" "$file"                      |
+                     grep -v 'Mime.*'                                  |
+                     grep -v 'Content-Disposition'                     )
+         printf "%s\n" "$phttpdres"                                    #
+         exit 0                                                        #
+       } || {                                                          #
+         phttpdres=$(cat <<-__________________PHTTPDRES                |
                        HTTP/1.0 403 Forbidden
                        Date: $DATE
                        Expires: $DATE
@@ -211,15 +211,15 @@ _______________________PHTTPDRES
 
                        403 Forbidden
 __________________PHTTPDRES
-                sed 's/^ *//'                                                 )
-         printf "%s" "$phttpdres" && exit 0                                   #
-       }
-  elif [ -d $URL_PATH ]; then
-       [ -x $URL_PATH ] && {
-         dir="${URL_PATH}"                                                    #
-         dir=${dir%/}                                                         #
-         rotdir=$(dirname $0)/html/tree.html                                  #
-         res=$(cat <<-_________________PHTTPDRES                              |
+                sed 's/^ *//'                                          )
+         printf "%s" "$phttpdres" && exit 0                            #
+       }                                                               #
+  elif [ -d $URL_PATH ]; then                                          #
+       [ -x $URL_PATH ] && {                                           #
+         dir="${URL_PATH}"                                             #
+         dir=${dir%/}                                                  #
+         rotdir=$(dirname $0)/html/tree.html                           #
+         res=$(cat <<-_________________PHTTPDRES                       |
                  HTTP/1.0 200 OK
                  Date: $DATE
                  Expires: $DATE
@@ -233,25 +233,26 @@ _________________PHTTPDRES
                  <div>
 _________________res
                echo ${dir} '<br />'
-               find "${dir}"                                                  |
-               sed "s:$dir::"                                                 |
-               sed '/^$/ d'                                                   | 
-               sort                                                           | 
-               sed 's/\(.*\)\/\([^/]*\)$/\1|\n--<a href="\.&\/">\2<\/a>/'     |
-               sed 's:^/[^/|]*:|\&nbsp\;\&nbsp\;:'                            |
-               sed '/\/.*|/ s:/[^/|]*[/|]:|\&nbsp\;\&nbsp\;|:g'               |
-               sed 's/|[.0-9a-zA-Z]*|/|\&nbsp\;\&nbsp\;|/g'                   |
-               sed '/.*>/ s:\(.*\):\1<br />:'                                 | 
+               find "${dir}"                                           |
+               sed "s:$dir::"                                          |
+               sed '/^$/ d'                                            | 
+               sort                                                    | 
+               sed                                                     \
+               's/\(.*\)\/\([^/]*\)$/\1|\n--<a href="\.&\/">\2<\/a>/'  |
+               sed 's:^/[^/|]*:|\&nbsp\;\&nbsp\;:'                     |
+               sed '/\/.*|/ s:/[^/|]*[/|]:|\&nbsp\;\&nbsp\;|:g'        |
+               sed 's/|[.0-9a-zA-Z]*|/|\&nbsp\;\&nbsp\;|/g'            |
+               sed '/.*>/ s:\(.*\):\1<br />:'                          | 
                tr -d '\n'                
-               cat <<-_________________res                                    |
+               cat <<-_________________res                             |
                  </div>
                  </body>
                  </html>                     
 _________________res
-               sed 's/^ *//'                                                  )
-         printf "%s" "$res" && exit 0                                         #
+               sed 's/^ *//'                                           )
+         printf "%s" "$res" && exit 0                                  #
        } || {
-         phttpdres=$(cat <<-__________________PHTTPDRES                       |
+         phttpdres=$(cat <<-__________________PHTTPDRES                |
                        HTTP/1.0 403 Forbidden
                        Date: $DATE
                        Expires: $DATE
@@ -260,11 +261,11 @@ _________________res
 
                        403 Forbidden
 __________________PHTTPDRES
-                sed 's/^ *//'                                                 )
-         printf "%s" "$phttpdres" && exit 0                                   #
-       }
-  fi
-  phttpdres=$(cat <<-________________PHTTPDRES                                |
+                sed 's/^ *//'                                          )
+         printf "%s" "$phttpdres" && exit 0                            #
+       }                                                               #
+  fi                                                                   #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 404 Not Found
                 Date: $DATE
                 Expires: $DATE
@@ -273,10 +274,10 @@ __________________PHTTPDRES
 
                 404 Not Found
 ________________PHTTPDRES
-              sed 's/^ *//'                                                   )
-  printf "%s" "$phttpdres" && exit 0                                          #
-} || {
-  phttpdres=$(cat <<-________________PHTTPDRES                                |
+              sed 's/^ *//'                                            )
+  printf "%s" "$phttpdres" && exit 0                                   #
+} || {                                                                 #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 500 Internal Server Error
                 Date: $DATE
                 Expires: $DATE
@@ -285,20 +286,21 @@ ________________PHTTPDRES
 
                 500 Internal Server Error
 ________________PHTTPDRES
-              sed 's/^ *//'                                                   )
-  printf "%s" "$phttpdres" && exit 0;                                         }
-}                                                                             #
-# === 5.-fオプションでフィルタ動作 ===========================================
-${PHTTPD:-}                                                                   #
-# === 6.webサーバー動作 =====================================================
-if [ -n "${CMD_SOCAT:-}" ]; then                                              #
-  socat -vv TCP-LISTEN:${PORT},crlf,reuseaddr,fork SYSTEM:"${0} -f" 2>/dev/null
-else                                                                          #
- while :                                                                      #
-  do                                                                          #
-    cat "$PIPE"                                         |                     #
-    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1 -q 1    |                     #
-    main 1>"$PIPE"                                      #                     #
-    [ $? != 0 ] && break                                #                     #
-  done                                                                        #
-fi                                                                            #
+              sed 's/^ *//'                                            )
+  printf "%s" "$phttpdres" && exit 0;                                  }
+}                                                                      #
+# === 5.-fオプションでフィルタ動作 =====================================
+${PHTTPD:-}                                                            #
+# === 6.webサーバー動作 ===============================================
+if [ -n "${CMD_SOCAT:-}" ]; then                                       #
+  socat -vv TCP-LISTEN:${PORT},crlf,reuseaddr,fork SYSTEM:"${0} -f"    \
+  2>/dev/null                                                          #
+else                                                                   #
+ while :                                                               #
+  do                                                                   #
+    cat "$PIPE"                                         |              #
+    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1 -q 1    |              #
+    main 1>"$PIPE"                                      #              #
+    [ $? != 0 ] && break                                #              #
+  done                                                                 #
+fi                                                                     #
