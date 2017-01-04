@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DIRECTORY TREE</title>
+    <style>
+/* Foundation Override
+------------------------------------------------------------------- */
+
+body {
+    color: #77797c;
+    font-family: "Helvetica Neue", Helvetica, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+    font-weight: 500;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: source-sans-pro, "Helvetica Neue", Helvetica, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+    font-weight: 300;
+    font-style: normal;
+    color: black;
+    text-rendering: optimizeLegibility;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    line-height: 1.2125em;
+}
+
+h1 {
+    font-size: 2.125em;
+}
+
+h2 {
+    font: 300 24px source-sans-pro, "Helvetica Neue", Helvetica, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+    margin-bottom: 25px;
+}
+
+h3,
+h4,
+h5,
+h6 {
+    color: #5a5a5c;
+    font-weight: 400;
+    font-size: 1em;
+    line-height: 1.5;
+    margin: 0;
+}
+
+h3 a {
+    font-weight: 400;
+}
+
+hr {
+    margin: 50px 0 15px;
+}
+
+.row {
+    padding: 0 20px;
+}
+
+code {
+    font-family: monospace;
+    color: #686868;
+}
+
+p {
+    font: 400 14px / 24px "Helvetica Neue", Helvetica, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+    margin-bottom: 5px;
+    text-rendering: optimizeLegibility;
+}
+
+a {
+    color: #2098f5;
+    font-weight: 400;
+    -webkit-transition: 320ms;
+    transition: 320ms;
+    text-decoration: none;
+}
+</style>
+</head>
+<body>
+    <h1>Menu with Directory Tree</h1>
+    <p>Costomize the looks of Directory Tree Menu as you like.</br />You can edit style and html on tree.html in phttpd/tree.</p>
+    <p>You can use this Tree menu with these commands in conf</p>
+<code>
+[without_condition, on_uri_match BRE] [serve_dir_or_file_from,serve_dir, serve_file, ・・・] HOGE
+</code>
+    <hr/>
