@@ -1,6 +1,6 @@
 #!/bin/sh
-#            A simple, ShellScript HTTP server written in POSIX sh.
-#                  "write once, run anywhere, run for good"
+#        A simple, ShellScript HTTP server written in POSIX sh.
+#              "write once, run anywhere, run for good"
 #
 # required: mime-make 
 # Original author: BRAVEMAN LONGBRIDGE, 2016
@@ -40,15 +40,15 @@ error_exit() {                                                         #
   exit $1                                                              #
 }                                                                      #
 # === 5.必要なプログラムの存在を確認する ===============================
-if type socat >/dev/null 2>&1; then                                    #
+if command -v socat >/dev/null; then                                   #
   CMD_SOCAT='socat'                                                    #
-elif type nc >/dev/null 2>&1; then                                     #
+elif command -v nc >/dev/null; then                                    #
   CMD_NC='nc'                                                          #
   [ -p /tmp/servepipe ] || {                                           #
     mkfifo /tmp/servepipe                                              #
     PIPE='/tmp/servepipe'                                              #
   }                                                                    #
-elif type netcat >/dev/null 2>&1; then                                 #
+elif command -v netcat >/dev/null; then                                #
   CMD_NETCAT='netcat'                                                  #
   [ -p /tmp/servepipe ] || {                                           #
     mkfifo /tmp/servepipe                                              #
@@ -199,7 +199,8 @@ _______________________PHTTPDRES
                      mime-make -F "$file" "$file"                      |
                      grep -v 'Mime.*'                                  |
                      grep -v 'Content-Disposition'                     )
-         printf "%s\n" "$phttpdres"                                    #
+         printf "%s\n" "$phttpdres"                                    |
+         sed '/Content-Type/ s/$/; charset="UTF-8"/'                   #
          exit 0                                                        #
        } || {                                                          #
          phttpdres=$(cat <<-__________________PHTTPDRES                |
@@ -235,7 +236,7 @@ _________________res
                echo ${dir} '<br />'
                find "${dir}"                                           |
                sed "s:$dir::"                                          |
-               sed '/^$/ d'                                            | 
+               sed '/^$/ d'                                            |
                sort                                                    | 
                sed                                                     \
                's/\(.*\)\/\([^/]*\)$/\1|\n--<a href="\.&\/">\2<\/a>/'  |
