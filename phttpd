@@ -40,9 +40,9 @@ error_exit() {                                                         #
   exit $1                                                              #
 }                                                                      #
 # === 5.必要なプログラムの存在を確認する ===============================
-if command -v socat >/dev/null; then                                   #
+if   command -v socat  >/dev/null; then                                #
   CMD_SOCAT='socat'                                                    #
-elif command -v nc >/dev/null; then                                    #
+elif command -v nc     >/dev/null; then                                #
   CMD_NC='nc'                                                          #
   [ -p /tmp/servepipe ] || {                                           #
     mkfifo /tmp/servepipe                                              #
