@@ -197,9 +197,12 @@ __________________PHTTPDRES
 _______________________PHTTPDRES
                      sed 's/^ *//'                                          
                      mime-make -F "$file" "$file"                      |
+		     head -n 3                                         |
                      grep -v 'Mime.*'                                  |
-                     grep -v 'Content-Disposition'                     )
-         printf "%s\n" "$phttpdres"                                    |
+		     grep -v 'Content-Disposition';                    )
+         printf "%s\n" "$phttpdres"                                    #
+	 echo                                                          #
+	 cat "$file"                                                   |
          sed '/Content-Type/ s/$/; charset="UTF-8"/'                   #
          exit 0                                                        #
        } || {                                                          #
