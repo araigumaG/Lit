@@ -901,7 +901,7 @@ while :; do                                                            #
     --regex=*)   regex=$(printf '%s' "${1#--regex=}" | tr -d '\n')     #
                  shift                                                 #
                  ;;                                                    #
-    -r)          s=$(printf '%s' "${2:-}" | tr -d '\n')                #
+    -r)          regex=$(printf '%s' "${2:-}" | tr -d '\n')                #
                  shift 2                                               #
                  ;;                                                    #
     --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}" | tr -d '\n') #
