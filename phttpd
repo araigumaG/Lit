@@ -19,7 +19,7 @@ export PATH="$(command -p getconf PATH):${PATH:-}"                     #
 # === 2.パラメーター1 =================================================  
 DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                               #
 # === 3.パラメーター2 =================================================  
-PORT=1234
+PORT=1234                                                              #
 DOCROOT=~                                                              #
 regex='/.*'                                                            #
 # === 4-1.エラー終了関数定義 ============================================
@@ -901,7 +901,7 @@ while :; do                                                            #
     --regex=*)   regex=$(printf '%s' "${1#--regex=}" | tr -d '\n')     #
                  shift                                                 #
                  ;;                                                    #
-    -r)          regex=$(printf '%s' "${2:-}" | tr -d '\n')                #
+    -r)          regex=$(printf '%s' "${2:-}" | tr -d '\n')            #
                  shift 2                                               #
                  ;;                                                    #
     --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}" | tr -d '\n') #
@@ -932,7 +932,7 @@ read -r line || {                                                      #
                 Server: Slash Bin Slash sh
                 Content-Type: text/html;charset="UTF-8"
 
-                400 Bad Request
+                <h1>400 Bad Request</h1>
 ________________PHTTPDRES
               sed 's/^ *//'                                            )
 printf "%s" "$phttpdres" && exit 0                                     #
@@ -951,7 +951,7 @@ END
                 Server: Slash Bin Slash sh
                 Content-Type: text/html;charset="UTF-8"
 
-                400 Bad Request
+                <h1>400 Bad Request</h1>
 ________________PHTTPDRES
               sed 's/^ *//'                                            )
 printf "%s" "$phttpdres" && exit 0                                     #
@@ -965,7 +965,7 @@ printf "%s" "$phttpdres" && exit 0                                     #
                 Server: Slash Bin Slash sh
                 Content-Type: text/html;charset="UTF-8"
 
-                405 Method Not Allowed
+                <h1>405 Method Not Allowed</h1>
 ________________PHTTPDRES
               sed 's/^ *//'                                            )
 printf "%s" "$phttpdres" && exit 0                                     #
@@ -974,7 +974,7 @@ printf "%s" "$phttpdres" && exit 0                                     #
 logfile=$(dirname $0)/log/request.log
 while read -r line; do                                                 #
   line=$(echo "$line" | tr -d '[\r\n]')                                #
-  echo "$line" >> "$logfile"                                           #
+  #echo "$line" >> "$logfile"                                           #
   [ -z "$line" ] && break                                              #
 done                                                                   #
 # === 4.REQUEST_URIのマッチ ==========================================
@@ -984,13 +984,13 @@ done                                                                   #
   URL_PATH=${DOCROOT}${REQUEST_URI}                                    #
   ls ${URL_PATH%/} >/dev/null 2>&1 || {                                #
     phttpdres=$(cat <<-__________________PHTTPDRES                     |
-                  HTTP/1.0 400 Bad Request
+                  HTTP/1.0 404 Not Found
                   Date: $DATE
                   Expires: $DATE
                   Server: Slash Bin Slash sh
                   Content-Type: text/html;charset="UTF-8"
 
-                  400 Bad Request
+                  <h1>404 Not Found</h1>
 __________________PHTTPDRES
                 sed 's/^ *//'                                          )
     printf "%s" "$phttpdres" && exit 0                                 #
@@ -1025,7 +1025,7 @@ _______________________PHTTPDRES
                        Server: Slash Bin Slash sh
                        Content-Type: text/html;charset="UTF-8"
 
-                       403 Forbidden
+                       <h1>403 Forbidden</h1>
 __________________PHTTPDRES
                 sed 's/^ *//'                                          )
          printf "%s" "$phttpdres" && exit 0                            #
@@ -1075,24 +1075,12 @@ _________________res
                        Server: Slash Bin Slash sh
                        Content-Type: text/html;charset="UTF-8"
 
-                       403 Forbidden
+                       <h1>403 Forbidden</h1>
 __________________PHTTPDRES
                 sed 's/^ *//'                                          )
          printf "%s" "$phttpdres" && exit 0                            #
        }                                                               #
   fi                                                                   #
-  phttpdres=$(cat <<-________________PHTTPDRES                         |
-                HTTP/1.0 404 Not Found
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
-
-                404 Not Found
-________________PHTTPDRES
-              sed 's/^ *//'                                            )
-  printf "%s" "$phttpdres" && exit 0                                   #
-} || {                                                                 #
   phttpdres=$(cat <<-________________PHTTPDRES                         |
                 HTTP/1.0 500 Internal Server Error
                 Date: $DATE
@@ -1100,7 +1088,19 @@ ________________PHTTPDRES
                 Server: Slash Bin Slash sh
                 Content-Type: text/html;charset="UTF-8"
 
-                500 Internal Server Error
+                <h1>500 Internal Server Error</h1>
+________________PHTTPDRES
+              sed 's/^ *//'                                            )
+  printf "%s" "$phttpdres" && exit 0                                   #
+} || {                                                                 #
+  phttpdres=$(cat <<-________________PHTTPDRES                         |
+                HTTP/1.0 400 Bad Request 
+                Date: $DATE
+                Expires: $DATE
+                Server: Slash Bin Slash sh
+                Content-Type: text/html;charset="UTF-8"
+
+                <h1>400 Bad Request</h1>
 ________________PHTTPDRES
               sed 's/^ *//'                                            )
   printf "%s" "$phttpdres" && exit 0;                                  }
