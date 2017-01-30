@@ -1051,6 +1051,7 @@ _________________res
                echo ${dir} '<br />'
                find "${dir}"                                           |
                sed "s:$dir::"                                          |
+               grep -v '.git'                                          |
                sed '/^$/ d'                                            |
                sort                                                    | 
                sed                                                     \
