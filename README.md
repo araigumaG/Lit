@@ -14,7 +14,7 @@ You can serve any file or dir, as you like.
 - Connectivity and behavior configurable with options
 - One single shell script (Mapping programing & at a glance)
 - Small
-- Alphabetical file-directory only allowed
+- Alphabetical file-directory name only allowed
 - Hidden dirs/files not allowed
 - Parent dir reference not allowed (/../)
 - HTTP Error responses
