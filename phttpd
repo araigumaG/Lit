@@ -196,12 +196,12 @@ __________________PHTTPDRES
                        Server: Slash Bin Slash sh
                        $(file -i "$file"                            |  #
                          sed -e 's/.*\(:\)/Content-Type\1/'            #
-                         )  
+                       )  
 _______________________PHTTPDRES
                      sed 's/^ *//'                                     )   
          printf "%s\n" "$phttpdres"                                    #                     
-	       echo                                                          #
-	       cat "$file"                                                   #
+         echo                                                          #
+         cat "$file"                                                   #
          exit 0                                                        #
        } || {                                                          #
          phttpdres=$(cat <<-__________________PHTTPDRES                |
