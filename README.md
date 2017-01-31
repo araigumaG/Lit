@@ -60,7 +60,7 @@ And the root directory of PHTTPd's can be set with the
 -d option or the --docroot option. 
 
 When URI matches your set REGEX, it will serve a directory or file matching 
-the staring of the request from DOC_ROOT_DIR.
+the string of the request from DOC_ROOT_DIR.
 
 ## Recommended Example:
 ```
@@ -77,10 +77,16 @@ any character string including /, it will be served if there is a
 
 If you not set `-p` or `--port` option, phttpd wait on port `1234` by default.
 
-Without -d (or --docroot) option and -r (or --regex), PHTTPd's DOC_ROOT_DIR 
+Without `-d` (or `--docroot`) option and `-r` (or `--regex`), PHTTPd's DOC_ROOT_DIR 
 is ~ and REGEX is '/.*'. 
 
 For your needs, set options you like.
+
+## debug
+you can use `-f` or `--filter` options for debugging.
+Make phttpd act as a filter, not as a server. If you send a pseudo request you will get a response to that.
+
+You can easily extend it with this option.
 
 ## Mapping programing and at a glance
 
