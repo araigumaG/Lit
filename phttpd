@@ -4,25 +4,25 @@
 #
 # required: mime-make(@shellschoccarjpn)
 # Original author: BRAVEMAN LONGBRIDGE, 2016
-# powerd by POSIX原理主義 
+# powerd by POSIXism 
 #################################################################
 
 #################################################################
-# 初期化
+# INITIALIZATION
 #################################################################
-# === 1.初期化処理 =============================================  
+# === 1.Initialization ========================================= 
 umask 0022                                                      #
 set -eu                                                         #
 unset IFS                                                       #
 export LC_ALL='C'                                               #
 export PATH="$(command -p getconf PATH):${PATH:-}"              #
-# === 2.パラメーター1 ==========================================  
+# === 2.Parameter1 ============================================= 
 DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                        #
-# === 3.パラメーター2 ==========================================
+# === 3.Parameter2 =============================================
 PORT=1234                                                       #
 DOCROOT=~                                                       #
 regex='/.*'                                                     #
-# === 4-1.エラー終了関数定義 ===================================
+# === 4-1.Define Error termination func ========================
 print_usage_and_exit () {                                       #
   cat <<-__USAGE 1>&2
 	Usage : ${0##*/} [options] 
@@ -39,7 +39,7 @@ error_exit() {                                                  #
   [ -n "$2"       ] && echo "${0##*/}: $2" 1>&2                 #
   exit $1                                                       #
 }                                                               #
-# === 5.必要なプログラムの存在を確認する =======================
+# === 5.Comfirm existance of required command ==================
 if   command -v socat  >/dev/null; then                         #
   CMD_SOCAT='socat'                                             #
 elif command -v nc     >/dev/null; then                         #
@@ -58,18 +58,18 @@ else                                                            #
   echo 'NO COMMAND' 1>&2                                        #
   exit 1                                                        #
 fi                                                              #
-# === 6.不要な名前付きパイプを消す =============================
+# === 6.Erase unnecessary pipe =================================
 trap "exit 1"          HUP INT PIPE QUIT TERM                   #
 trap "rm -f ${PIPE:-}" EXIT                                     #
 
 #################################################################
-# 引数解釈
+# OPTION INTERPRETATION
 #################################################################
-# === ヘルプ表示指定がある場合は表示して終了 ===================
-case "$# ${1:-}" in
-  '1 -h'|'1 --help'|'1 --version') print_usage_and_exit;;
-esac
-# === オプション読取 ===========================================
+# === If there is help opt, display and exit ===================
+case "$# ${1:-}" in                                             #
+  '1 -h'|'1 --help'|'1 --version') print_usage_and_exit;;       #
+esac                                                            #
+# === Getopts ==================================================
 while :; do                                                     #
   case "${1:-}" in                                              #
     --filter)    PHTTPD="main"                                  #
@@ -112,10 +112,10 @@ while :; do                                                     #
 done                                                            #
 
 #################################################################
-# メイン
+# MAIN
 #################################################################
 main(){
-# === 1.リクエストヘッダ読み込み ===============================
+# === 1.Read Request headder ===================================
 read -r line || {                                               #
   phttpdres=$(cat <<-________________PHTTPDRES                  |
                 HTTP/1.0 400 Bad Request
@@ -148,7 +148,7 @@ ________________PHTTPDRES
               sed 's/^ *//'                                     )
 printf "%s" "$phttpdres" && exit 0                              #
 }                                                               #
-# === 2.GETメソッド以外をはじく=================================
+# === 2.Exclude except GET method ==============================
 [ "$REQUEST_METHOD" = "GET" ] || {                              #
   phttpdres=$(cat <<-________________PHTTPDRES                  |
                 HTTP/1.0 405 Method Not Allowed
@@ -162,14 +162,14 @@ ________________PHTTPDRES
               sed 's/^ *//'                                     )
 printf "%s" "$phttpdres" && exit 0                              #
 }                                                               #
-# === 3.REQUESTをログに残す ====================================
+# === 3.Read the rest. if necessary, leave it in log ===========
 logfile=$(dirname $0)/log/request.log
 while read -r line; do                                          #
   line=$(echo "$line" | tr -d '[\r\n]')                         #
   #echo "$line" >> "$logfile"                                   #
   [ -z "$line" ] && break                                       #
 done                                                            #
-# === 4.REQUEST_URIのマッチ ====================================
+# === 4.Match the REQUEST_URI ==================================
 { echo "$REQUEST_URI" | grep "$regex" >/dev/null 2>&1; } && {   #
   # sanitaize REQUEST_URI                                       #
   REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"           #
@@ -301,9 +301,9 @@ ________________PHTTPDRES
               sed 's/^ *//'                                     )
   printf "%s" "$phttpdres" && exit 0;                           }
 }                                                               #
-# === 5.-fオプションでフィルタ動作 =============================
+# === 5.-f:filter operation for debug ==========================
 ${PHTTPD:-}                                                     #
-# === 6.webサーバー動作 ========================================
+# === 6.Run as a web server ====================================
 if [ -n "${CMD_SOCAT:-}" ]; then                                #
 socat TCP-LISTEN:${PORT},fork EXEC:"${0} -f ${dopt:-} ${ropt:-}"\
   2>/dev/null                                                   #
