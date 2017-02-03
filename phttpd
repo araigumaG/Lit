@@ -2,6 +2,7 @@
 #     A simple, ShellScript HTTP server written in POSIX sh.
 #           "write once, run anywhere, run for good"
 #
+# required: mime-make(@shellschoccarjpn)
 # Original author: BRAVEMAN LONGBRIDGE, 2016
 # powerd by POSIX原理主義 
 #################################################################
@@ -199,12 +200,15 @@ __________________PHTTPDRES
                        Date: $DATE
                        Expires: $DATE
                        Server: Slash Bin Slash sh
-                       $(file -i "$file"                     |  #
-                         sed -e 's/.*\(:\)/Content-Type\1/'     #
-                       )  
 _______________________PHTTPDRES
                      sed 's/^ *//'                              )
          printf "%s\n" "$phttpdres"                             #
+         mime-make -F "$file" "$file"                           |
+         head -n 3                                              |
+         grep -v 'Mime.*'                                       |
+         grep -v 'Content-Dis.*'                                |
+         tr -d '\n\r'                                           |
+         sed '/Content-Type/ s/$/; charset="UTF-8"\n/'          #
          echo                                                   #
          cat "$file"                                            #
          exit 0                                                 #
