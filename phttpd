@@ -229,7 +229,6 @@ __________________PHTTPDRES
        [ -x $URL_PATH ] && {                                    #
          dir="${URL_PATH}"                                      #
          dir=${dir%/}                                           #
-         rotdir=$(dirname $0)/html/tree.html                    #
          res=$(cat <<-_________________PHTTPDRES                |
                  HTTP/1.0 200 OK
                  Date: $DATE
@@ -239,9 +238,16 @@ __________________PHTTPDRES
 
 _________________PHTTPDRES
                sed 's/^ *//'      
-               cat $rotdir
                cat <<_________________res
-                 <div>
+                 <!DOCTYPE html>
+                 <html lang="en">
+                 <head>
+                   <meta charset="UTF-8">
+                   <title>$dir Tree Menu</title>
+                 </head>
+                 <body>
+                   <h1>TREE $dir</h1>
+                   <div>
 _________________res
                echo ${dir} '<br />'
                find "${dir}"                                    |
@@ -257,7 +263,7 @@ _________________res
                sed '/.*>/ s:\(.*\):\1<br />:'                   |
                tr -d '\n'               
                cat <<-_________________res                      |
-                 </div>
+                   </div>
                  </body>
                  </html>                     
 _________________res
