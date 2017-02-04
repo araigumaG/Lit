@@ -210,7 +210,8 @@ __________________PHTTPDRES
 ___________________________RES
                          sed 's/^ *//'                          )
              printf "%s\n" "$phttpdres"                         #
-             exec "$file"                                       #
+             $file                                      #
+             exit 0                                             #
          else
              phttpdres=$(cat <<-___________________________RES  |
                            HTTP/1.0 200 OK
