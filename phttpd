@@ -202,6 +202,7 @@ __________________PHTTPDRES
                   tr -d '\n\r'                                  |
                   sed '/Content-Type/ s/$/; charset="UTF-8"/'   )
          if printf "%s" "$ct_hdr" | grep -q 'x-sh'; then
+            [ -x ${file} ] && {
              phttpdres=$(cat <<-___________________________RES  |
                            HTTP/1.0 200 OK
                            Date: $DATE
@@ -210,8 +211,8 @@ __________________PHTTPDRES
 ___________________________RES
                          sed 's/^ *//'                          )
              printf "%s\n" "$phttpdres"                         #
-             $file                                      #
-             exit 0                                             #
+             $file                                              #
+             exit 0                                             }
          else
              phttpdres=$(cat <<-___________________________RES  |
                            HTTP/1.0 200 OK
