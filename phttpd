@@ -207,10 +207,10 @@ __________________PHTTPDRES
                            Date: $DATE
                            Expires: $DATE
                            Server: Slash Bin Slash sh
-                           $(exec "$file")
 ___________________________RES
                          sed 's/^ *//'                          )
-             printf "%s" "$phttpdres" && exit 0                 #
+             printf "%s\n" "$phttpdres"                         #
+             exec "$file"                                       #
          else
              phttpdres=$(cat <<-___________________________RES  |
                            HTTP/1.0 200 OK
