@@ -195,23 +195,36 @@ __________________PHTTPDRES
   if   [ -f ${URL_PATH%/} ]; then                               #
        [ -r ${URL_PATH%/} ] && {                                #
          file="${URL_PATH%/}"                                   #
-         phttpdres=$(cat <<-_______________________PHTTPDRES    |
-                       HTTP/1.0 200 OK
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-_______________________PHTTPDRES
-                     sed 's/^ *//'                              )
-         printf "%s\n" "$phttpdres"                             #
-         mime-make -F "$file" "$file"                           |
-         head -n 3                                              |
-         grep -v 'Mime.*'                                       |
-         grep -v 'Content-Dis.*'                                |
-         tr -d '\n\r'                                           |
-         sed '/Content-Type/ s/$/; charset="UTF-8"\n/'          #
-         echo                                                   #
-         cat "$file"                                            #
-         exit 0                                                 #
+         ct_hdr=$(mime-make -F "$file" "$file"                  |
+                  head -n 3                                     |
+                  grep -v 'Mime.*'                              |
+                  grep -v 'Content-Dis.*'                       |
+                  tr -d '\n\r'                                  |
+                  sed '/Content-Type/ s/$/; charset="UTF-8"/'   )
+         if printf "%s" "$ct_hdr" | grep -q 'x-sh'; then
+             phttpdres=$(cat <<-___________________________RES  |
+                           HTTP/1.0 200 OK
+                           Date: $DATE
+                           Expires: $DATE
+                           Server: Slash Bin Slash sh
+                           $(exec "$file")
+___________________________RES
+                         sed 's/^ *//'                          )
+             printf "%s" "$phttpdres" && exit 0                 #
+         else
+             phttpdres=$(cat <<-___________________________RES  |
+                           HTTP/1.0 200 OK
+                           Date: $DATE
+                           Expires: $DATE
+                           Server: Slash Bin Slash sh
+                           $ct_hdr
+___________________________RES
+                         sed 's/^ *//'                          )
+             printf "%s\n" "$phttpdres"                         #
+             echo                                               #
+             cat "$file"                                        #
+             exit 0                                             #
+         fi
        } || {                                                   #
          phttpdres=$(cat <<-__________________PHTTPDRES         |
                        HTTP/1.0 403 Forbidden
