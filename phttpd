@@ -212,7 +212,7 @@ ___________________________RES
                          sed 's/^ *//'                          )
              printf "%s\n" "$phttpdres"                         #
              $file                                              #
-             exit 0                                             }
+             exit 0;                                            }
          else
              phttpdres=$(cat <<-___________________________RES  |
                            HTTP/1.0 200 OK
