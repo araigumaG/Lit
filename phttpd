@@ -117,17 +117,17 @@ done                                                            #
 main(){
 # === 1.Read Request headder ===================================
 read -r line || {                                               #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 400 Bad Request
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+  cat <<-____PHTTPDRES                                          |
+    HTTP/1.0 400 Bad Request
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>400 Bad Request</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
+    <h1>400 Bad Request</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                 #
+  exit 0                                                        #
 }                                                               #
 line=$(echo "$line" | tr -d '[\r\n]')                           #
 read -r REQUEST_METHOD REQUEST_URI REQUEST_HTTP_VERSION << END
@@ -136,31 +136,31 @@ END
 [ -n "$REQUEST_METHOD" ]       &&                               \
 [ -n "$REQUEST_URI" ]          &&                               \
 [ -n "$REQUEST_HTTP_VERSION" ] || {                             #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 400 Bad Request
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+  cat <<-____PHTTPDRES                                          |
+    HTTP/1.0 400 Bad Request
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>400 Bad Request</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
+    <h1>400 Bad Request</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                 #
+  exit 0                                                        #
 }                                                               #
 # === 2.Exclude except GET method ==============================
 [ "$REQUEST_METHOD" = "GET" ] || {                              #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 405 Method Not Allowed
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+  cat <<-____PHTTPDRES                                          |
+    HTTP/1.0 405 Method Not Allowed
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>405 Method Not Allowed</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
+    <h1>405 Method Not Allowed</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                 #
+  exit 0                                                        #
 }                                                               #
 # === 3.Read the rest. if necessary, leave it in log ===========
 logfile=$(dirname $0)/log/request.log
@@ -175,17 +175,17 @@ done                                                            #
   REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"           #
   URL_PATH=${DOCROOT}${REQUEST_URI}                             #
   ls ${URL_PATH%/} >/dev/null 2>&1 || {                         #
-    phttpdres=$(cat <<-__________________PHTTPDRES              |
-                  HTTP/1.0 404 Not Found
-                  Date: $DATE
-                  Expires: $DATE
-                  Server: Slash Bin Slash sh
-                  Content-Type: text/html;charset="UTF-8"
+    cat <<-______PHTTPDRES                                      |
+      HTTP/1.0 404 Not Found
+      Date: $DATE
+      Expires: $DATE
+      Server: Slash Bin Slash sh
+      Content-Type: text/html;charset="UTF-8"
 
-                  <h1>404 Not Found</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-    printf "%s" "$phttpdres" && exit 0                          #
+      <h1>404 Not Found</h1>
+______PHTTPDRES
+    sed 's/^ *//'                                               #
+    exit 0                                                      #
   }                                                             #
   # serve index file if exists in requested directory           #
   [ -d "$URL_PATH"                -a                            \
@@ -203,112 +203,110 @@ __________________PHTTPDRES
                   sed '/Content-Type/ s/$/; charset="UTF-8"/'   )
          if printf "%s" "$ct_hdr" | grep -q 'x-sh'; then
             [ -x ${file} ] && {
-             phttpdres=$(cat <<-___________________________RES  |
-                           HTTP/1.0 200 OK
-                           Date: $DATE
-                           Expires: $DATE
-                           Server: Slash Bin Slash sh
-___________________________RES
-                         sed 's/^ *//'                          )
-             printf "%s\n" "$phttpdres"                         #
+             cat <<-_______________PHTTPDRES                    |
+               HTTP/1.0 200 OK
+               Date: $DATE
+               Expires: $DATE
+               Server: Slash Bin Slash sh
+_______________PHTTPDRES
+             sed 's/^ *//'                                      #
              $file                                              #
              exit 0;                                            }
          else
-             phttpdres=$(cat <<-___________________________RES  |
-                           HTTP/1.0 200 OK
-                           Date: $DATE
-                           Expires: $DATE
-                           Server: Slash Bin Slash sh
-                           $ct_hdr
-___________________________RES
-                         sed 's/^ *//'                          )
-             printf "%s\n" "$phttpdres"                         #
+             cat <<-_______________PHTTPDRES                    |
+               HTTP/1.0 200 OK
+               Date: $DATE
+               Expires: $DATE
+               Server: Slash Bin Slash sh
+               $ct_hdr
+_______________PHTTPDRES
+             sed 's/^ *//'                                      #
              echo                                               #
              cat "$file"                                        #
              exit 0                                             #
-         fi
+         fi                                                     #
        } || {                                                   #
-         phttpdres=$(cat <<-__________________PHTTPDRES         |
-                       HTTP/1.0 403 Forbidden
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-                       Content-Type: text/html;charset="UTF-8"
+         cat <<-___________PHTTPDRES                            |
+           HTTP/1.0 403 Forbidden
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-                       <h1>403 Forbidden</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-         printf "%s" "$phttpdres" && exit 0                     #
+           <h1>403 Forbidden</h1>
+___________PHTTPDRES
+         sed 's/^ *//'                                          #
+         exit 0                                                 #
        }                                                        #
   elif [ -d $URL_PATH ]; then                                   #
        [ -x $URL_PATH ] && {                                    #
          dir="${URL_PATH}"                                      #
          dir=${dir%/}                                           #
-         res=$(cat <<-_________________PHTTPDRES                |
-                 HTTP/1.0 200 OK
-                 Date: $DATE
-                 Expires: $DATE
-                 Server: Slash Bin Slash sh
-                 Content-Type: text/html;charset="UTF-8"
+         cat <<-___________PHTTPDRES                            |
+           HTTP/1.0 200 OK
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-_________________PHTTPDRES
-               sed 's/^ *//'      
-               cat <<_________________res
-                 <!DOCTYPE html>
-                 <html lang="en">
-                 <head>
-                   <meta charset="UTF-8">
-                   <title>$dir Tree Menu</title>
-                 </head>
-                 <body>
-                   <h1>TREE $dir</h1>
-                   <div>
-_________________res
-               echo ${dir} '<br />'
-               find "${dir}"                                    |
-               sed "s:$dir::"                                   |
-               grep -v '.git'                                   |
-               sed '/^$/ d'                                     |
-               sort                                             |
-               sed -e                                           \
+___________PHTTPDRES
+         sed 's/^ *//'      
+         cat <<___________PHTTPDRES
+           <!DOCTYPE html>
+           <html lang="en">
+           <head>
+           <meta charset="UTF-8">
+           <title>$dir Tree Menu</title>
+           </head>
+           <body>
+           <h1>TREE $dir</h1>
+           <div>
+___________PHTTPDRES
+         echo ${dir} '<br />'
+         find "${dir}"                                          |
+         sed "s:$dir::"                                         |
+         grep -v '.git'                                         |
+         sed '/^$/ d'                                           |
+         sort                                                   |
+         sed -e                                                 \
   's/\(.*\)\/\([^/]*\)$/\1|\n\&#9472\;<a href="\.&\/">\2<\/a>/' |
-               sed 's:^/[^/|]*:|　:'                            |
-               sed '/\/.*|/ s:/[^/|]*[/|]:|　|:g'               |
-               sed 's/|[-_.0-9a-zA-Z]*|/|　|/g'                 |
-               sed '/.*>/ s:\(.*\):\1<br />:'                   |
-               tr -d '\n'               
-               cat <<-_________________res                      |
-                   </div>
-                 </body>
-                 </html>                     
-_________________res
-               sed 's/^ *//'                                    )
-         printf "%s" "$res" && exit 0                           #
+         sed 's:^/[^/|]*:|　:'                                  |
+         sed '/\/.*|/ s:/[^/|]*[/|]:|　|:g'                     |
+         sed 's/|[-_.0-9a-zA-Z]*|/|　|/g'                       |
+         sed '/.*>/ s:\(.*\):\1<br />:'                         |
+         tr -d '\n'                                             #
+         cat <<-___________PHTTPDRES                            |
+           </div>
+           </body>
+           </html>                     
+___________PHTTPDRES
+         sed 's/^ *//'                                          #
+         exit 0                                                 #
        } || {
-         phttpdres=$(cat <<-__________________PHTTPDRES         |
-                       HTTP/1.0 403 Forbidden
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-                       Content-Type: text/html;charset="UTF-8"
+         cat <<-___________PHTTPDRES                            |
+           HTTP/1.0 403 Forbidden
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-                       <h1>403 Forbidden</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-         printf "%s" "$phttpdres" && exit 0                     #
+           <h1>403 Forbidden</h1>
+___________PHTTPDRES
+         sed 's/^ *//'                                          #
+         exit 0                                                 #
        }                                                        #
   fi                                                            #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 500 Internal Server Error
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+  cat <<-____PHTTPDRES                                          |
+    HTTP/1.0 500 Internal Server Error
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>500 Internal Server Error</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-  printf "%s" "$phttpdres" && exit 0                            #
+    <h1>500 Internal Server Error</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                 #
+  exit 0                                                        #
 } || {                                                          #
   phttpdres=$(cat <<-________________PHTTPDRES                  |
                 HTTP/1.0 400 Bad Request 
