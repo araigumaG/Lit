@@ -295,17 +295,17 @@ ________________PHTTPDRES
               sed 's/^ *//'                                     )
   printf "%s" "$phttpdres" && exit 0                            #
 } || {                                                          #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 400 Bad Request 
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+  cat <<-____PHTTPDRES                                                    |
+    HTTP/1.0 400 Bad Request 
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>400 Bad Request</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-  printf "%s" "$phttpdres" && exit 0;                           }
+    <h1>400 Bad Request</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                           #
+  exit 0;                                                                 }
 }                                                               #
 # === 5.-f:filter operation for debug ==========================
 ${PHTTPD:-}                                                     #
