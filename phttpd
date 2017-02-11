@@ -1,29 +1,29 @@
 #!/bin/sh
-#     A simple, ShellScript HTTP server written in POSIX sh.
-#           "write once, run anywhere, run for good"
+#         A simple, ShellScript HTTP server written in POSIX sh.
+#                "write once, run anywhere, run for good"
 #
 # required: mime-make(@shellschoccarjpn)
 # Original author: BRAVEMAN LONGBRIDGE, 2016
 # powerd by POSIXism 
-#################################################################
+###########################################################################
 
-#################################################################
+###########################################################################
 # INITIALIZATION
-#################################################################
-# === 1.Initialization ========================================= 
-umask 0022                                                      #
-set -eu                                                         #
-unset IFS                                                       #
-export LC_ALL='C'                                               #
-export PATH="$(command -p getconf PATH):${PATH:-}"              #
-# === 2.Parameter1 ============================================= 
-DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                        #
-# === 3.Parameter2 =============================================
-PORT=1234                                                       #
-DOCROOT=~                                                       #
-regex='/.*'                                                     #
-# === 4-1.Define Error termination func ========================
-print_usage_and_exit () {                                       #
+###########################################################################
+# === 1.Initialization ===================================================
+umask 0022                                                                #
+set -eu                                                                   #
+unset IFS                                                                 #
+export LC_ALL='C'                                                         #
+export PATH="$(command -p getconf PATH):${PATH:-}"                        #
+# === 2.Parameter1 =======================================================
+DATE=$(date +"%a, %d %b %Y %H:%M:%S %Z")                                  #
+# === 3.Parameter2 =======================================================
+PORT=1234                                                                 #
+DOCROOT=~                                                                 #
+regex='/.*'                                                               #
+# === 4-1.Define Error termination func ==================================
+print_usage_and_exit () {                                                 #
   cat <<-__USAGE 1>&2
 	Usage : ${0##*/} [options] 
 	        OPTIONS:
@@ -33,268 +33,279 @@ print_usage_and_exit () {                                       #
 	        -d <DIR>  |--docroot=<DIR>
 	Tue Jan 3 23:24:45 JST 2017
 __USAGE
-  exit 1                                                        #
-}                                                               #
-error_exit() {                                                  #
-  [ -n "$2"       ] && echo "${0##*/}: $2" 1>&2                 #
-  exit $1                                                       #
-}                                                               #
-# === 5.Comfirm existance of required command ==================
-if   command -v socat  >/dev/null; then                         #
-  CMD_SOCAT='socat'                                             #
-elif command -v nc     >/dev/null; then                         #
-  CMD_NC='nc'                                                   #
-  [ -p /tmp/servepipe ] || {                                    #
-    mkfifo /tmp/servepipe                                       #
-    PIPE='/tmp/servepipe'                                       #
-  }                                                             #
-elif command -v netcat >/dev/null; then                         #
-  CMD_NETCAT='netcat'                                           #
-  [ -p /tmp/servepipe ] || {                                    #
-    mkfifo /tmp/servepipe                                       #
-    PIPE='/tmp/servepipe'                                       #
-  }                                                             #
-else                                                            #
-  echo 'NO COMMAND' 1>&2                                        #
-  exit 1                                                        #
-fi                                                              #
-# === 6.Erase unnecessary pipe =================================
-trap "exit 1"          HUP INT PIPE QUIT TERM                   #
-trap "rm -f ${PIPE:-}" EXIT                                     #
-
-#################################################################
+  exit 1                                                                  #
+}                                                                         #
+error_exit() {                                                            #
+  [ -n "$2"       ] && echo "${0##*/}: $2" 1>&2                           #
+  exit $1                                                                 #
+}                                                                         #
+# === 5.Comfirm existance of required command ============================
+if   command -v socat  >/dev/null; then                                   #
+  CMD_SOCAT='socat'                                                       #
+elif command -v nc     >/dev/null; then                                   #
+  CMD_NC='nc'                                                             #
+  [ -p /tmp/servepipe ] || {                                              #
+    mkfifo /tmp/servepipe                                                 #
+    PIPE='/tmp/servepipe'                                                 #
+  }                                                                       #
+elif command -v netcat >/dev/null; then                                   #
+  CMD_NETCAT='netcat'                                                     #
+  [ -p /tmp/servepipe ] || {                                              #
+    mkfifo /tmp/servepipe                                                 #
+    PIPE='/tmp/servepipe'                                                 #
+  }                                                                       #
+else                                                                      #
+  echo 'NO COMMAND' 1>&2                                                  #
+  exit 1                                                                  #
+fi                                                                        #
+# === 6.Erase unnecessary pipe ==========================================
+trap "exit 1"          HUP INT PIPE QUIT TERM                             #
+trap "rm -f ${PIPE:-}" EXIT                                               #
+###########################################################################
 # OPTION INTERPRETATION
-#################################################################
-# === If there is help opt, display and exit ===================
-case "$# ${1:-}" in                                             #
-  '1 -h'|'1 --help'|'1 --version') print_usage_and_exit;;       #
-esac                                                            #
-# === Getopts ==================================================
-while :; do                                                     #
-  case "${1:-}" in                                              #
-    --filter)    PHTTPD="main"                                  #
-                 shift                                          #
-                 ;;                                             #
-    -f)          PHTTPD="main"                                  #
-                 shift                                          #
-                 ;;                                             #
-    --port=*)    PORT=$(printf '%s' "${1#--port=}"              |
-                        tr -d '\n'                              )
-                 shift                                          #
-                 ;;                                             #
-    -p)          PORT=$(printf '%s' "${2:-}" | tr -d '\n')      #
-                 shift 2                                        #
-                 ;;                                             #
-    --regex=*)   regex=$(printf '%s' "${1#--regex=}"            |
-                 tr -d '\n'                                     )
-                 ropt="-r $regex"                               #
-                 shift                                          #
-                 ;;                                             #
-    -r)          regex=$(printf '%s' "${2:-}" | tr -d '\n')     #
-                 shift 2                                        #
-                 ;;                                             #
-    --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}"        |
-                 tr -d '\n'                                     )
-                 dopt="-d $DOCROOT"                             #
-                 shift                                          #
-                 ;;                                             #
-    -d)          DOCROOT=$(printf '%s' "${2:-}" | tr -d '\n')   #
-                 dopt="-d $DOCROOT"                             #
-                 shift 2                                        #
-                 ;;                                             #
-    --|-)        break                                          #
-                 ;;                                             #
-    --*|-*)      error_exit 1 'Invalid option'                  #
-                 ;;                                             #
-    *)           break                                          #
-                 ;;                                             #
-  esac                                                          #
-done                                                            #
-
-#################################################################
+###########################################################################
+# === If there is help opt, display and exit ============================
+case "$# ${1:-}" in                                                       #
+  '1 -h'|'1 --help'|'1 --version') print_usage_and_exit;;                 #
+esac                                                                      #
+# === Getopts ===========================================================
+while :; do                                                               #
+  case "${1:-}" in                                                        #
+    --filter)    PHTTPD="main"                                            #
+                 shift                                                    #
+                 ;;                                                       #
+    -f)          PHTTPD="main"                                            #
+                 shift                                                    #
+                 ;;                                                       #
+    --port=*)    PORT=$(printf '%s' "${1#--port=}"                        |
+                        tr -d '\n'                                        )
+                 shift                                                    #
+                 ;;                                                       #
+    -p)          PORT=$(printf '%s' "${2:-}" | tr -d '\n')                #
+                 shift 2                                                  #
+                 ;;                                                       #
+    --regex=*)   regex=$(printf '%s' "${1#--regex=}"                      |
+                 tr -d '\n'                                               )
+                 ropt="-r $regex"                                         #
+                 shift                                                    #
+                 ;;                                                       #
+    -r)          regex=$(printf '%s' "${2:-}" | tr -d '\n')               #
+                 shift 2                                                  #
+                 ;;                                                       #
+    --docroot=*) DOCROOT=$(printf '%s' "${1#--docroot=}"                  |
+                 tr -d '\n'                                               )
+                 dopt="-d $DOCROOT"                                       #
+                 shift                                                    #
+                 ;;                                                       #
+    -d)          DOCROOT=$(printf '%s' "${2:-}" | tr -d '\n')             #
+                 dopt="-d $DOCROOT"                                       #
+                 shift 2                                                  #
+                 ;;                                                       #
+    --|-)        break                                                    #
+                 ;;                                                       #
+    --*|-*)      error_exit 1 'Invalid option'                            #
+                 ;;                                                       #
+    *)           break                                                    #
+                 ;;                                                       #
+  esac                                                                    #
+done                                                                      #
+###########################################################################
 # MAIN
-#################################################################
+###########################################################################
 main(){
-# === 1.Read Request headder ===================================
-read -r line || {                                               #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 400 Bad Request
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+# === 1.Read Request headder ============================================
+read -r line || {                                                         #
+  cat <<-____PHTTPDRES                                                    |
+    HTTP/1.0 400 Bad Request
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>400 Bad Request</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
-}                                                               #
-line=$(echo "$line" | tr -d '[\r\n]')                           #
+    <h1>400 Bad Request</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                           #
+  exit 0                                                                  #
+}                                                                         #
+line=$(echo "$line" | tr -d '[\r\n]')                                     #
 read -r REQUEST_METHOD REQUEST_URI REQUEST_HTTP_VERSION << END
 $(echo $line)
 END
-[ -n "$REQUEST_METHOD" ]       &&                               \
-[ -n "$REQUEST_URI" ]          &&                               \
-[ -n "$REQUEST_HTTP_VERSION" ] || {                             #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 400 Bad Request
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+[ -n "$REQUEST_METHOD" ]       &&                                         \
+[ -n "$REQUEST_URI" ]          &&                                         \
+[ -n "$REQUEST_HTTP_VERSION" ] || {                                       #
+  cat <<-____PHTTPDRES                                                    |
+    HTTP/1.0 400 Bad Request
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>400 Bad Request</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
-}                                                               #
-# === 2.Exclude except GET method ==============================
-[ "$REQUEST_METHOD" = "GET" ] || {                              #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 405 Method Not Allowed
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+    <h1>400 Bad Request</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                           #
+  exit 0                                                                  #
+}                                                                         #
+# === 2.Exclude except GET method =======================================
+[ "$REQUEST_METHOD" = "GET" ] || {                                        #
+  cat <<-____PHTTPDRES                                                    |
+    HTTP/1.0 405 Method Not Allowed
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>405 Method Not Allowed</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-printf "%s" "$phttpdres" && exit 0                              #
-}                                                               #
-# === 3.Read the rest. if necessary, leave it in log ===========
-logfile=$(dirname $0)/log/request.log
-while read -r line; do                                          #
-  line=$(echo "$line" | tr -d '[\r\n]')                         #
-  #echo "$line" >> "$logfile"                                   #
-  [ -z "$line" ] && break                                       #
-done                                                            #
-# === 4.Match the REQUEST_URI ==================================
-{ echo "$REQUEST_URI" | grep "$regex" >/dev/null 2>&1; } && {   #
-  # sanitaize REQUEST_URI                                       #
-  REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"           #
-  URL_PATH=${DOCROOT}${REQUEST_URI}                             #
-  ls ${URL_PATH%/} >/dev/null 2>&1 || {                         #
-    phttpdres=$(cat <<-__________________PHTTPDRES              |
-                  HTTP/1.0 404 Not Found
-                  Date: $DATE
-                  Expires: $DATE
-                  Server: Slash Bin Slash sh
-                  Content-Type: text/html;charset="UTF-8"
+    <h1>405 Method Not Allowed</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                           #
+  exit 0                                                                  #
+}                                                                         #
+# === 3.Read the rest. if necessary, leave it in log ====================
+logfile=$(dirname $0)/log/request.log                                     #
+while read -r line; do                                                    #
+  line=$(echo "$line" | tr -d '[\r\n]')                                   #
+  #echo "$line" >> "$logfile"                                             #
+  [ -z "$line" ] && break                                                 #
+done                                                                      #
+# === 4.Match the REQUEST_URI ===========================================
+{ echo "$REQUEST_URI" | grep "$regex" >/dev/null 2>&1; } && {             #
+  # sanitaize REQUEST_URI                                                 #
+  REQUEST_URI="${REQUEST_URI%%[!a-zA-Z0-9_~\-\.\/]*}"                     #
+  URL_PATH=${DOCROOT}${REQUEST_URI}                                       #
+  ls ${URL_PATH%/} >/dev/null 2>&1 || {                                   #
+    cat <<-______PHTTPDRES                                                |
+      HTTP/1.0 404 Not Found
+      Date: $DATE
+      Expires: $DATE
+      Server: Slash Bin Slash sh
+      Content-Type: text/html;charset="UTF-8"
 
-                  <h1>404 Not Found</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-    printf "%s" "$phttpdres" && exit 0                          #
-  }                                                             #
-  # serve index file if exists in requested directory           #
-  [ -d "$URL_PATH"                -a                            \
-    -f "${URL_PATH}/index.html"   -a                            \
-    -r "${URL_PATH}/index.html" ] &&                            \
-  URL_PATH="${URL_PATH}/index.html"                             #
-  if   [ -f ${URL_PATH%/} ]; then                               #
-       [ -r ${URL_PATH%/} ] && {                                #
-         file="${URL_PATH%/}"                                   #
-         phttpdres=$(cat <<-_______________________PHTTPDRES    |
-                       HTTP/1.0 200 OK
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-_______________________PHTTPDRES
-                     sed 's/^ *//'                              )
-         printf "%s\n" "$phttpdres"                             #
-         mime-make -F "$file" "$file"                           |
-         head -n 3                                              |
-         grep -v 'Mime.*'                                       |
-         grep -v 'Content-Dis.*'                                |
-         tr -d '\n\r'                                           |
-         sed '/Content-Type/ s/$/; charset="UTF-8"\n/'          #
-         echo                                                   #
-         cat "$file"                                            #
-         exit 0                                                 #
-       } || {                                                   #
-         phttpdres=$(cat <<-__________________PHTTPDRES         |
-                       HTTP/1.0 403 Forbidden
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-                       Content-Type: text/html;charset="UTF-8"
+      <h1>404 Not Found</h1>
+______PHTTPDRES
+    sed 's/^ *//'                                                         #
+    exit 0                                                                #
+  }                                                                       #
+  # serve index file if exists in requested directory                     #
+  [ -d "$URL_PATH"                -a                                      \
+    -f "${URL_PATH}/index.html"   -a                                      \
+    -r "${URL_PATH}/index.html" ] &&                                      \
+  URL_PATH="${URL_PATH}/index.html"                                       #
+  if   [ -f ${URL_PATH%/} ]; then                                         #
+       [ -r ${URL_PATH%/} ] && {                                          #
+         file="${URL_PATH%/}"                                             #
+         ct_hdr=$(mime-make -F "$file" "$file"                            |
+                  head -n 3                                               |
+                  grep -v 'Mime.*'                                        |
+                  grep -v 'Content-Dis.*'                                 |
+                  tr -d '\n\r'                                            |
+                  sed '/Content-Type/ s/$/; charset="UTF-8"/'             )
+         if printf "%s" "$ct_hdr" | grep -q 'x-sh'; then
+            [ -x ${file} ] && {
+             cat <<-_______________PHTTPDRES                              |
+               HTTP/1.0 200 OK
+               Date: $DATE
+               Expires: $DATE
+               Server: Slash Bin Slash sh
+_______________PHTTPDRES
+             sed 's/^ *//'                                                #
+             $file                                                        #
+             exit 0;                                                      }
+         else
+             cat <<-_______________PHTTPDRES                              |
+               HTTP/1.0 200 OK
+               Date: $DATE
+               Expires: $DATE
+               Server: Slash Bin Slash sh
+               $ct_hdr
+_______________PHTTPDRES
+             sed 's/^ *//'                                                #
+             echo                                                         #
+             cat "$file"                                                  #
+             exit 0                                                       #
+         fi                                                               #
+       } || {                                                             #
+         cat <<-___________PHTTPDRES                                      |
+           HTTP/1.0 403 Forbidden
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-                       <h1>403 Forbidden</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-         printf "%s" "$phttpdres" && exit 0                     #
-       }                                                        #
-  elif [ -d $URL_PATH ]; then                                   #
-       [ -x $URL_PATH ] && {                                    #
-         dir="${URL_PATH}"                                      #
-         dir=${dir%/}                                           #
-         res=$(cat <<-_________________PHTTPDRES                |
-                 HTTP/1.0 200 OK
-                 Date: $DATE
-                 Expires: $DATE
-                 Server: Slash Bin Slash sh
-                 Content-Type: text/html;charset="UTF-8"
+           <h1>403 Forbidden</h1>
+___________PHTTPDRES
+         sed 's/^ *//'                                                    #
+         exit 0                                                           #
+       }                                                                  #
+  elif [ -d $URL_PATH ]; then                                             #
+       [ -x $URL_PATH ] && {                                              #
+         dir="${URL_PATH}"                                                #
+         dir=${dir%/}                                                     #
+         cat <<-___________PHTTPDRES                                      |
+           HTTP/1.0 200 OK
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-_________________PHTTPDRES
-               sed 's/^ *//'      
-               cat <<_________________res
-                 <!DOCTYPE html>
-                 <html lang="en">
-                 <head>
-                   <meta charset="UTF-8">
-                   <title>$dir Tree Menu</title>
-                 </head>
-                 <body>
-                   <h1>TREE $dir</h1>
-                   <div>
-_________________res
-               echo ${dir} '<br />'
-               find "${dir}"                                    |
-               sed "s:$dir::"                                   |
-               grep -v '.git'                                   |
-               sed '/^$/ d'                                     |
-               sort                                             |
-               sed -e                                           \
-  's/\(.*\)\/\([^/]*\)$/\1|\n\&#9472\;<a href="\.&\/">\2<\/a>/' |
-               sed 's:^/[^/|]*:|　:'                            |
-               sed '/\/.*|/ s:/[^/|]*[/|]:|　|:g'               |
-               sed 's/|[-_.0-9a-zA-Z]*|/|　|/g'                 |
-               sed '/.*>/ s:\(.*\):\1<br />:'                   |
-               tr -d '\n'               
-               cat <<-_________________res                      |
-                   </div>
-                 </body>
-                 </html>                     
-_________________res
-               sed 's/^ *//'                                    )
-         printf "%s" "$res" && exit 0                           #
+___________PHTTPDRES
+         sed 's/^ *//'                                                    #
+         cat <<___________PHTTPDRES                                       |
+           <!DOCTYPE html>
+           <html lang="en">
+           <head>
+           <meta charset="UTF-8">
+           <title>$dir Tree Menu</title>
+           </head>
+           <body>
+           <h1>TREE $dir</h1>
+           <div>
+___________PHTTPDRES
+         sed 's/^ *//'                                                    #
+         echo ${dir} '<br />'                                             #
+         find "${dir}"                                                    |
+         sed "s:$dir::"                                                   |
+         grep -v '.git'                                                   |
+         sed '/^$/ d'                                                     |
+         sort                                                             |
+         sed 's/\(.*\)\/\([^/]*\)$/\1|\n\&#9472\;<a href="\.&\/">\2<\/a>/'|
+         sed 's:^/[^/|]*:|　:'                                            |
+         sed '/\/.*|/ s:/[^/|]*[/|]:|　|:g'                               |
+         sed 's/|[-_.0-9a-zA-Z]*|/|　|/g'                                 |
+         sed '/.*>/ s:\(.*\):\1<br />:'                                   |
+         tr -d '\n'                                                       #
+         cat <<-___________PHTTPDRES                                      |
+           </div>
+           </body>
+           </html>                     
+___________PHTTPDRES
+         sed 's/^ *//'                                                    #
+         exit 0                                                           #
        } || {
-         phttpdres=$(cat <<-__________________PHTTPDRES         |
-                       HTTP/1.0 403 Forbidden
-                       Date: $DATE
-                       Expires: $DATE
-                       Server: Slash Bin Slash sh
-                       Content-Type: text/html;charset="UTF-8"
+         cat <<-___________PHTTPDRES                                      |
+           HTTP/1.0 403 Forbidden
+           Date: $DATE
+           Expires: $DATE
+           Server: Slash Bin Slash sh
+           Content-Type: text/html;charset="UTF-8"
 
-                       <h1>403 Forbidden</h1>
-__________________PHTTPDRES
-                sed 's/^ *//'                                   )
-         printf "%s" "$phttpdres" && exit 0                     #
-       }                                                        #
-  fi                                                            #
-  phttpdres=$(cat <<-________________PHTTPDRES                  |
-                HTTP/1.0 500 Internal Server Error
-                Date: $DATE
-                Expires: $DATE
-                Server: Slash Bin Slash sh
-                Content-Type: text/html;charset="UTF-8"
+           <h1>403 Forbidden</h1>
+___________PHTTPDRES
+         sed 's/^ *//'                                                    #
+         exit 0                                                           #
+       }                                                                  #
+  fi                                                                      #
+  cat <<-____PHTTPDRES                                                    |
+    HTTP/1.0 500 Internal Server Error
+    Date: $DATE
+    Expires: $DATE
+    Server: Slash Bin Slash sh
+    Content-Type: text/html;charset="UTF-8"
 
-                <h1>500 Internal Server Error</h1>
-________________PHTTPDRES
-              sed 's/^ *//'                                     )
-  printf "%s" "$phttpdres" && exit 0                            #
-} || {                                                          #
+    <h1>500 Internal Server Error</h1>
+____PHTTPDRES
+  sed 's/^ *//'                                                           #
+  exit 0                                                                  #
+} || {                                                                    #
   cat <<-____PHTTPDRES                                                    |
     HTTP/1.0 400 Bad Request 
     Date: $DATE
@@ -306,19 +317,19 @@ ________________PHTTPDRES
 ____PHTTPDRES
   sed 's/^ *//'                                                           #
   exit 0;                                                                 }
-}                                                               #
-# === 5.-f:filter operation for debug ==========================
-${PHTTPD:-}                                                     #
-# === 6.Run as a web server ====================================
-if [ -n "${CMD_SOCAT:-}" ]; then                                #
-socat TCP-LISTEN:${PORT},fork EXEC:"${0} -f ${dopt:-} ${ropt:-}"\
-  2>/dev/null                                                   #
-else                                                            #
- while :                                                        #
-  do                                                            #
-    cat "$PIPE"                                         |       #
-    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1 -q 1    |       #
-    main 1>"$PIPE"                                      #       #
-    [ $? != 0 ] && break                                #       #
-  done                                                          #
-fi                                                              #
+}                                                                         #
+# === 5.-f:filter operation for debug ===================================
+${PHTTPD:-}                                                               #
+# === 6.Run as a web server =============================================
+if [ -n "${CMD_SOCAT:-}" ]; then                                          #
+  socat TCP-LISTEN:${PORT},fork EXEC:"${0} -f ${dopt:-} ${ropt:-}"        \
+  2>/dev/null                                                             #
+else                                                                      #
+ while :                                                                  #
+  do                                                                      #
+    cat "$PIPE"                                         |                 #
+    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1 -q 1    |                 #
+    main 1>"$PIPE"                                      #                 #
+    [ $? != 0 ] && break                                #                 #
+  done                                                                    #
+fi                                                                        #
