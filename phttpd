@@ -61,6 +61,8 @@ fi                                                                        #
 # === 6.Erase unnecessary pipe ==========================================
 trap "exit 1"          HUP INT PIPE QUIT TERM                             #
 trap "rm -f ${PIPE:-}" EXIT                                               #
+# === 7.Prepare =========================================================
+LF=
 ###########################################################################
 # OPTION INTERPRETATION
 ###########################################################################
@@ -240,46 +242,7 @@ ___________PHTTPDRES
        [ -x $URL_PATH ] && {                                              #
          dir="${URL_PATH}"                                                #
          dir=${dir%/}                                                     #
-         cat <<-___________PHTTPDRES                                      |
-           HTTP/1.0 200 OK
-           Date: $DATE
-           Expires: $DATE
-           Server: Slash Bin Slash sh
-           Content-Type: text/html;charset="UTF-8"
-
-___________PHTTPDRES
-         sed 's/^ *//'                                                    #
-         cat <<___________PHTTPDRES                                       |
-           <!DOCTYPE html>
-           <html lang="en">
-           <head>
-           <meta charset="UTF-8">
-           <title>$dir Tree Menu</title>
-           </head>
-           <body>
-           <h1>TREE $dir</h1>
-           <div>
-___________PHTTPDRES
-         sed 's/^ *//'                                                    #
-         echo ${dir} '<br />'                                             #
-         find "${dir}"                                                    |
-         sed "s:$dir::"                                                   |
-         grep -v '.git'                                                   |
-         sed '/^$/ d'                                                     |
-         sort                                                             |
-         sed 's/\(.*\)\/\([^/]*\)$/\1|\n\&#9472\;<a href="\.&\/">\2<\/a>/'|
-         sed 's:^/[^/|]*:|　:'                                            |
-         sed '/\/.*|/ s:/[^/|]*[/|]:|　|:g'                               |
-         sed 's/|[-_.0-9a-zA-Z]*|/|　|/g'                                 |
-         sed '/.*>/ s:\(.*\):\1<br />:'                                   |
-         tr -d '\n'                                                       #
-         cat <<-___________PHTTPDRES                                      |
-           </div>
-           </body>
-           </html>                     
-___________PHTTPDRES
-         sed 's/^ *//'                                                    #
-         exit 0                                                           #
+         ./treemenu.sh "$dir" && exit 0                                   #
        } || {
          cat <<-___________PHTTPDRES                                      |
            HTTP/1.0 403 Forbidden
@@ -328,7 +291,7 @@ else                                                                      #
  while :                                                                  #
   do                                                                      #
     cat "$PIPE"                                         |                 #
-    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1 -q 1    |                 #
+    ${CMD_NC:-}${CMD_NETCAT:-} -kl ${PORT} -w 1         |                 #
     main 1>"$PIPE"                                      #                 #
     [ $? != 0 ] && break                                #                 #
   done                                                                    #
