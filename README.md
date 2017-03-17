@@ -1,27 +1,34 @@
-# Lit - 怪人メイド女
+# Lit - 怪人メイド女（Webサーバーの姿をした怪人）
 これはPOSIX shに準拠したシンプルで小さいWebサーバー怪人です。
-きっと、あなたの望むファイルやディレクトリのリストを供給してくれるに違いありません。netcatとsocatで動作します。
+きっと、よく仕えて、あなたの望むファイルやディレクトリのリストを、
+あなたの望む時に供給してくれるに違いありません。netcatとsocatで動作します。
 
-なお、この怪人メイド女は不完全なサイボーグなので若干の欠陥を持っています。扱いには注意してください。そして改造手術を施し、怪人をさらに進化させてくれるご主人さまをお待ちしております。
+なお、この怪人メイド女は不完全なサイボーグなので若干の欠陥を持っています。
+扱いには注意してください。そして改造手術を施し、怪人をさらに進化させてくれる
+ご主人さまをお待ちしております。
 
-POSIX原理主義はちょー楽しいので、その楽しさをわかってもらうために、怪人メイド女にはlitと名付けました。Git「間抜け」の命名例よりパクりました。Lit「ちょー楽しい」という意味です。サーバーの表記が怪人メイド女となっています。
+POSIX原理主義はちょー楽しいので、その楽しさをわかってもらうために、
+怪人メイド女にはlitと名付けました。Git「間抜け」の命名例よりパクりました。
+Lit「ちょー楽しい」という意味です。なお、サーバーの表記が怪人メイド女となっています。
 
 ## 特徴
+怪人メイド女-Litの基本的な機能は以下のようになっています。
+
 - 静的ページのwebサーバーです。 
 - POSIX原理主義
     - コピーしてくるだけで、いつでも、どこでも、すぐにお仕えできます。
     - 途中で壊れない、きっとあなたの完璧なメイドになりえます。
     - 'write onece, run anywhere, run for good'
-- 拡張子が.shのシェルスクリプトを実行できます。つまり動的にページを生成するポテ>ンシャルを有しています。
+- 拡張子が.shのシェルスクリプトを実行できます。動的にページを生成可能なポテンシャル
 - ディレクトリの場合にはディレクトリツリーを生成します。
     - directory.shを改変すれば好きな形にできます。
-　　- 改造すれば、リダイレクトも簡単です（近日改造予定）。
+    - 改造すれば、リダイレクトも簡単なはずです（近日改造予定）。
 - ログの収集も場合によっては可能ですが、改良の余地ありです。
 - 設定ファイルはありません。
 - 接続と動作の設定はオプションで行います
 - 軽量なシングルファイルです。
-- 写像的プログラミングに習っているので処理順を把握するのは楽だと思います（好みによります。個性の強い怪人です）
-- 英語しか理解のできない、言語能力に難のある怪人です。今他の言語も学習中です。
+- 写像的プログラミング（好みによります。個性の強い怪人です）
+- 英語しか理解のできない、言語能力に難のある怪人です。他の言語も学習中です。
 - 隠しファイルは表示しません
 - 親ディレクトリの参照はできません
 - HTTP Error responses
@@ -31,62 +38,80 @@ POSIX原理主義はちょー楽しいので、その楽しさをわかっても
     - 400 Bad Request
     - 500 Internal Error
 
-怪人メイド女は、上記のような基本的なことを実行可能です。これから対応予定の機能は以下の通りです。
+## 使い方
 
-1. Run service as unprivileged user
-2. URL decoding (%XX)
-3. Access and error logs with logger
-4. Other METHOD(PUT, POST, DELETE, ...)
-6. cookie
-
-
-## Usage:
-
-怪人メイド女は、ディレクトリで以下のコマンドを実行するだけで動作します。
+怪人メイド女の扱いは簡単です。ディレクトリで以下のコマンドを実行するだけです。
 
 ```
 $ ./lit -r 'REGEX' -p PORT_NUMBER -d ROOT_DIRECTORY
 ```
-怪人メイド女は、-pオプションで、指定したポート番号"PORT_NUMBER"で接続を待ち受けます。ルートディレクトリは-dオプションで指定したディレクトリになります。
+-pオプションで、指定したポート番号"PORT_NUMBER"で接続を待ち受けます。
+ルートディレクトリは-dオプションで指定したディレクトリです。
 
-When URI matches your set REGEX, it will serve a directory 
-or file matching the string of the request from DOC_ROOT_DIR.
+なお、-rオプションで指定された正規表現とリクエストURIがマッチした場合に限り、
+ルートディレクトリ内より対象のファイルまたはディレクトリを供給することができます。
 
-## Recommended Example:
+なお、これらのオプションを指定しなかった場合ですが、デフォルトルートディレクトリは、
+ユーザーディレクトリとなります。デフォルトのポートは１２３４番ポートで、
+マッチ可能なデフォルトURIは`/`から始まる任意のパスです。
+
+
+## オススメの例と動作機構
+ここではオススメの使い方と、具体的な動作について説明します。
 ```
-$ ./lit -r '/.*' -d /mnt/c/Users/username -p 8080
+$ ./lit -r '/.*' -d . -p 8080
 ```
-この例では、怪人メイド女は8080番ポートで動作します。ルートは"/mnt/c/Users/username"です
+この例では、怪人メイド女-Litは8080番ポートで動作します。ルートディレクトリは、
+コマンドを実行したカレントディレクトリです。URIはBRE正規表現である'/.*'にマッチします。
+
+この例では、8080番ポートで以下のように動作します。
+
+1. クライアント要求の’/から始まる任意のURI’で部分指定されたものに、
+ルートディレクトリのパスを追加して、カレントディレクトリ内のローカルパスを構築します。
+2. 構築されたローカルパスのディレクトリまたはファイルが存在するか、lsで問い合わせます
+3. 要求がディレクトリであれば、中身をツリーでリスト表示（注1）し、
+ファイルであればファイルを提供します。（なお、要求ディレクトリ内にindex.htmlがあればそれを表示します）
+
+（注１）ディレクトリのリストは相対パスリンクつきで表示されますので、
+任意のファイルまたはフォルダに簡単に移動できます。
 URI can match '/.*' BRE (Basic Regular Expression). 
 
-In the above example, if the string requested by the 
-user matches any character string including /, it will be served if there is a corresponding file or directory. The directory
-list is displayed with a relative path link by HTML, so the 
-user can easily access the desired directory and file.
-
-If you not set `-p` or `--port` option, phttpd wait on port 
-`1234` by default.
-
-Without `-d` (or `--docroot`) option and 
-`-r` (or `--regex`), PHTTPd's DOC_ROOT_DIR 
-is ~ and REGEX is '/.*'. 
-
-For your needs, set options you like.
-
 ## debug
-you can use `-f` or `--filter` options for debugging.
-Make phttpd act as a filter, not as a server. 
-If you send a pseudo request you will get a response to that.
+ちなみに、-fオプションでlitはフィルタとして振舞います。擬似リクエストを送れば、そ
+れに対するレスポンスを返してくれます。改造が捗ると思います。
 
-You can easily extend it with this option.
+以下のような形です。リクエスト先のhoge.shの中身は
+```
+#!/bin/sh
 
-## Mapping programing and at a glance
+echo hello
+```
+です。標準出力に以下のように出力されます。
+```
+$./lit -f
+GET /hoge.sh teketo
 
-Deciphering and expanding is easy, 
-as this shell script is written to exactly 
-match the procedure manual. This is the procedure 
-manual itself. We are saying 
-that this idea is mapping programming or at a glance.
+HTTP/1.1 200 OK
+Date: ****
+Expires: ****
+Server: 怪人メイド女
+Content-Type: text/html; charset+"UTF-8"
+
+hello
+```
+## 対応予定の機能と問題点
+
+怪人メイド女は、サイボーグなので改良していく予定です。対応予定の機能は以下の通りです。
+
+1. 非特権ユーザーでのポート８０番での実行
+2. URLデコード
+3. loggerによるログ出力
+4. 他のMETHOD(PUT, POST, DELETE, ...)への対応
+6. cookie
+
+なお、netcatはBSD版のnetcatを想定しています。ですがこれがなかなかうまく動作してくれません。
+改良案を募集中でございます。おすすめはsocatの使用で、socatが存在すれば、socatで動作します。
+しかも、この場合は特に問題もなくマルチスレッドで動作してくれます。
 
 ## Requisites
 
@@ -98,3 +123,4 @@ that this idea is mapping programming or at a glance.
 * netcat
 * socat
 * mime-make(@shellschoccarjpn)
+
