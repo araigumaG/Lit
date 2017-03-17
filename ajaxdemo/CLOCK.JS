@@ -14,7 +14,7 @@ function createXMLHttpRequest(){
 // (このAjax通信をしたい時にはこの関数を呼び出す)
 function update_clock() {
   var url,xhr,to;
-  url = 'http://localhost:1234/CLOCK.sh';
+  url = 'http://localhost:1234/ajaxdemo/CLOCK.sh';
   xhr = createXMLHttpRequest();
   if (! xhr) {return;}
   to =  window.setTimeout(function(){xhr.abort()}, 30000); // 30秒でタイムアウト
