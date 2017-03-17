@@ -1,23 +1,29 @@
-# PHTTPd
-A simple mini web server written in posix sh, 
-needs netcat or socat.
-You can serve any file or dir, as you like.
+# Lit - 怪人メイド女
+これはPOSIX shに準拠したシンプルで小さいWebサーバー怪人です。
+きっと、あなたの望むファイルやディレクトリのリストを供給してくれるに違いありません。netcatとsocatで動作します。
 
-## Features:
+なお、この怪人メイド女は不完全なサイボーグなので若干の欠陥を持っています。扱いには注意してください。そして改造手術を施し、怪人をさらに進化させてくれるご主人さまをお待ちしております。
 
-- Static pages web server 
-- POSIX compliant
-    - Embeded shell interpreters friendly (ash, dash)
+POSIX原理主義はちょー楽しいので、その楽しさをわかってもらうために、怪人メイド女にはlitと名付けました。Git「間抜け」の命名例よりパクりました。Lit「ちょー楽しい」という意味です。サーバーの表記が怪人メイド女となっています。
+
+## 特徴
+- 静的ページのwebサーバーです。 
+- POSIX原理主義
+    - コピーしてくるだけで、いつでも、どこでも、すぐにお仕えできます。
+    - 途中で壊れない、きっとあなたの完璧なメイドになりえます。
     - 'write onece, run anywhere, run for good'
-- Generate directory tree menu
-- Collect access logs as necessary
-- No configs
-- Connectivity and behavior configurable with options
-- One single shell script (Mapping programing & at a glance)
-- Small
-- Alphabetical file-directory name only allowed
-- Hidden dirs/files not allowed
-- Parent dir reference not allowed (/../)
+- 拡張子が.shのシェルスクリプトを実行できます。つまり動的にページを生成するポテ>ンシャルを有しています。
+- ディレクトリの場合にはディレクトリツリーを生成します。
+    - directory.shを改変すれば好きな形にできます。
+　　- 改造すれば、リダイレクトも簡単です（近日改造予定）。
+- ログの収集も場合によっては可能ですが、改良の余地ありです。
+- 設定ファイルはありません。
+- 接続と動作の設定はオプションで行います
+- 軽量なシングルファイルです。
+- 写像的プログラミングに習っているので処理順を把握するのは楽だと思います（好みによります。個性の強い怪人です）
+- 英語しか理解のできない、言語能力に難のある怪人です。今他の言語も学習中です。
+- 隠しファイルは表示しません
+- 親ディレクトリの参照はできません
 - HTTP Error responses
     - 405 Method Not Allowed
     - 404 Not Found
@@ -25,10 +31,7 @@ You can serve any file or dir, as you like.
     - 400 Bad Request
     - 500 Internal Error
 
-In phttpd, basic things like the above can be executed.
-What I can not do yet and I do not understand well is 
-as follows and will be implemented while looking at the 
-POSIXism scriptures in the near future.
+怪人メイド女は、上記のような基本的なことを実行可能です。これから対応予定の機能は以下の通りです。
 
 1. Run service as unprivileged user
 2. URL decoding (%XX)
@@ -36,42 +39,24 @@ POSIXism scriptures in the near future.
 4. Other METHOD(PUT, POST, DELETE, ...)
 6. cookie
 
-It seems that there are still places that are not good 
-and bad security in addition to the rest, but for the 
-moment it is the first trial of the first round. "There 
-is no complete software, there is release only" and it 
-is also written in UNIX philosophy. 
-If you do a little with shell script, I think that you 
-can also deliver dynamic contents.
 
 ## Usage:
 
-For example, simply execute the following command on the
-phttpd directory.
+怪人メイド女は、ディレクトリで以下のコマンドを実行するだけで動作します。
 
 ```
-$ ./phttpd -r 'REGEX' -p PORT_NUMBER -d ROOT_DIRECTORY
+$ ./lit -r 'REGEX' -p PORT_NUMBER -d ROOT_DIRECTORY
 ```
-or you can also use long option.
-
-```
-$ ./phttpd --regex='REGEX'             \
-           --port=PORT_NUMBER          \
-           --docroot=ROOT_DIRECTORY    #
-```
-PHTTPd listens on the port number "PORT_NUMBER" you set. 
-And the root directory of PHTTPd's can be set with the 
--d option or the --docroot option. 
+怪人メイド女は、-pオプションで、指定したポート番号"PORT_NUMBER"で接続を待ち受けます。ルートディレクトリは-dオプションで指定したディレクトリになります。
 
 When URI matches your set REGEX, it will serve a directory 
 or file matching the string of the request from DOC_ROOT_DIR.
 
 ## Recommended Example:
 ```
-$ ./phttpd -r '/.*' -d /mnt/c/Users/username -p 8080
+$ ./lit -r '/.*' -d /mnt/c/Users/username -p 8080
 ```
-In this case, phttpd listen on port 8080 and DOCROOT 
-is "/mnt/c/Users/username". 
+この例では、怪人メイド女は8080番ポートで動作します。ルートは"/mnt/c/Users/username"です
 URI can match '/.*' BRE (Basic Regular Expression). 
 
 In the above example, if the string requested by the 
