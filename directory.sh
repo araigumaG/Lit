@@ -18,18 +18,7 @@ DIR="$1"                                                            #
 LF=$(printf '\\\n_')                                                #
 LF=${LF%_}                                                          #
 #                                                                   #
-# === 2.Header ======================================================
-cat <<__RESPONSE                                                    |
-  HTTP/1.0 200 OK
-  Date: $DATE
-  Expires: $DATE
-  Server: Slash Bin Slash sh
-  Content-Type: text/html;charset="UTF-8"
-
-__RESPONSE
-sed 's/^ *//'                                                       #
-#                                                                   #
-# === 3.Body ========================================================
+# === 2.Body ========================================================
 # --- 1.html                                                        #
 cat <<__RESPONSE                                                    |
   <!DOCTYPE html>
@@ -77,5 +66,5 @@ cat <<-__RESPONSE                                                   |
 __RESPONSE
 sed 's/^ *//'                                                       #
 #                                                                   #
-# === 4.Finish ======================================================
+# === 3.Finish ======================================================
 exit 0                                                              #
