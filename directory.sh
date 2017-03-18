@@ -18,6 +18,14 @@ DIR="$1"                                                            #
 LF=$(printf '\\\n_')                                                #
 LF=${LF%_}                                                          #
 #                                                                   #
+# === HEADER ========================================================
+cat<<-RESPONSE
+	HTTP/1.1 200 OK
+	Server: henahena
+	Content-Type: text/html; charset="UTF-8"
+
+RESPONSE
+#                                                                   #
 # === 2.Body ========================================================
 # --- 1.html                                                        #
 cat <<__RESPONSE                                                    |

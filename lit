@@ -148,7 +148,7 @@ response(){
 	}')
 	Date: $DATE
 	Expires: $DATE
-	Server: Monster Maid Woman
+	Server: Monster Maid Woman Lit
 	${CONTENTTYPE:-Content-Type: text/html}
 __RESPONSEHEADER
   sed '/Content-Type/ s/$/; charset="UTF-8"/'
@@ -233,9 +233,7 @@ ________________RESPONSE
        [ -x $URL_PATH ] && {                                    #
          dir="${URL_PATH}"                                      #
          dir=${dir%/}                                           #
-         response 200 <<-________________RESPONSE
-		$(directory.sh "$dir")
-________________RESPONSE
+	 directory.sh "$dir" && exit 0
        } || {                                                   #
          response 403 <<-________________RESPONSE
 		<html><body><h1>403 Forbidden</h1></body></html>
