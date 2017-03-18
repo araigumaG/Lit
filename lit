@@ -29,7 +29,7 @@ print_usage_and_exit () {
 	        -p <PORT> 
 	        -r '<BRE>'
 	        -d <DIR>  
-	Tue Jan 3 23:24:45 JST 2017
+	Sun Mar 18 11:41:45 JST 2017
 __USAGE
   exit 1 
 } 
