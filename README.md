@@ -121,7 +121,7 @@ hello
 * awk
 * netcat
 * socat
-* mime-make(@shellschoccarjpn)
+* mime-make(@shellshoccarjpn)
 
 ## LICENSE
 This software is released under the MIT License, see LICENSE
