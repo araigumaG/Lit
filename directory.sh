@@ -1,4 +1,4 @@
-#! /bin/sh
+: 2>&-
 #
 #         Generate HTML directory Tree menu with POSIXism
 #             "Write Once, Run Anywhere, Run for Good"

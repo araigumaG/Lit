@@ -1,4 +1,4 @@
-#!/bin/sh
+: 2>&-
 
 datetime=$(date '+%Y/%m/%d %H:%M:%S')
 cat <<HTTP_RESPONSE

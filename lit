@@ -1,4 +1,4 @@
-#!/bin/sh
+: 2&>-
 #    A simple, ShellScript HTTP server written in POSIX sh.
 #           "write once, run anywhere, run for good"
 #
